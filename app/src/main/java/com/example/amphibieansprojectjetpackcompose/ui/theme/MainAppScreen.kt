@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.amphibieansprojectjetpackcompose.ui.theme.screens.home.HomeScreen
@@ -13,7 +16,7 @@ import com.example.amphibieansprojectjetpackcompose.ui.theme.screens.home.HomeVi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(windowSize : WindowWidthSizeClass) {
     Scaffold {
         Surface(
             modifier = Modifier
@@ -21,7 +24,8 @@ fun MainScreen() {
                 .padding(it)
         ) {
             val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
-            HomeScreen(networkState = viewModel.networkState)
+            val uiState by viewModel.uiState.collectAsState()
+            uiState?.let { it1 -> HomeScreen(networkState = viewModel.networkState, windowSize = windowSize, uiState = it1, viewModel = viewModel) }
         }
     }
 }

@@ -12,7 +12,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.amphibieansprojectjetpackcompose.AphiApplication
 import com.example.amphibieansprojectjetpackcompose.data.AphiRepository
 import com.example.amphibieansprojectjetpackcompose.model.AphibeanItem
+import com.example.amphibieansprojectjetpackcompose.model.UiState
+import com.example.amphibieansprojectjetpackcompose.nertwork.AmphibieanAPI
 import com.example.amphibieansprojectjetpackcompose.nertwork.NetworkState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class HomeViewModel(val repository: AphiRepository) : ViewModel() {
@@ -20,14 +25,31 @@ class HomeViewModel(val repository: AphiRepository) : ViewModel() {
     var networkState: NetworkState by mutableStateOf(NetworkState.Loading)
         private set
 
+    var uiState = MutableStateFlow<UiState?>(null)
+
     init {
         getAllData()
+    }
+
+    fun updateCurrentItem(selectedItem : AphibeanItem) {
+        uiState.update {
+            currentItem -> currentItem?.copy(
+                currentItem = selectedItem
+            )
+        }
     }
 
     private fun getAllData() {
         viewModelScope.launch {
             networkState = try {
-                NetworkState.Success(data = repository.getAllData())
+                val newList = repository.getAllData()
+                uiState.update { currentState ->
+                    currentState?.copy(
+                        list = newList,
+                        currentItem = newList[0]
+                    )
+                }
+                NetworkState.Success(data = newList)
             } catch (e: Exception) {
                 NetworkState.Error(error = e.message ?: "Null")
             }

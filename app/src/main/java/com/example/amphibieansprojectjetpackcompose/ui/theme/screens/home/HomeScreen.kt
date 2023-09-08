@@ -1,5 +1,7 @@
 package com.example.amphibieansprojectjetpackcompose.ui.theme.screens.home
 
+import android.text.style.TabStopSpan
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,21 +32,36 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.amphibieansprojectjetpackcompose.R
 import com.example.amphibieansprojectjetpackcompose.model.AphibeanItem
+import com.example.amphibieansprojectjetpackcompose.model.UiState
 import com.example.amphibieansprojectjetpackcompose.nertwork.NetworkState
 import com.example.amphibieansprojectjetpackcompose.ui.theme.MainScreen
 
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, networkState: NetworkState) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    networkState: NetworkState,
+    windowSize: WindowWidthSizeClass,
+    uiState: UiState,
+    viewModel: HomeViewModel
+) {
     when (networkState) {
         is NetworkState.Success -> {
-            LazyColumn(
-                contentPadding = PaddingValues(5.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                items(items = networkState.data, key = { item -> item.name }) {
-                    AmphebianItem(data = it)
-                }
+            when (windowSize) {
+                WindowWidthSizeClass.Compact -> CompactView(data = networkState.data)
+                WindowWidthSizeClass.Medium -> HomeTabScreen(
+                    data = networkState.data,
+                    uiState = uiState,
+                    onItemClick = {
+                        viewModel.updateCurrentItem(it)
+                    })
+
+                WindowWidthSizeClass.Expanded -> HomeTabScreen(
+                    data = networkState.data,
+                    uiState = uiState,
+                    onItemClick = {
+                        viewModel.updateCurrentItem(it)
+                    })
             }
         }
 
@@ -59,12 +77,20 @@ fun HomeScreen(modifier: Modifier = Modifier, networkState: NetworkState) {
 }
 
 @Composable
+fun CompactView(data: List<AphibeanItem>) {
+    LazyColumn(
+        contentPadding = PaddingValues(5.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        items(items = data, key = { item -> item.name }) {
+            AmphebianItem(data = it)
+        }
+    }
+}
+
+@Composable
 fun LoadingErrorScreen(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.fillMaxSize()
-    )
+   Text(text = text, style = MaterialTheme.typography.titleLarge)
 }
 
 @Composable
@@ -87,11 +113,11 @@ fun AmphebianItem(modifier: Modifier = Modifier, data: AphibeanItem) {
                     .crossfade(true)
                     .data(data.img_src)
                     .build(),
-                placeholder = painterResource(id = R.drawable.loading) ,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(10.dp)
                     .clip(MaterialTheme.shapes.extraLarge)
+                    .height(250.dp)
                     .fillMaxWidth(),
                 contentScale = ContentScale.Crop
             )
@@ -111,7 +137,7 @@ fun AmphebianItem(modifier: Modifier = Modifier, data: AphibeanItem) {
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    MainScreen()
+//    MainScreen()
 }
 
 @Preview(showSystemUi = true)
