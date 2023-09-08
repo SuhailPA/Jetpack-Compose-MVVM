@@ -24,8 +24,7 @@ fun MainScreen(windowSize : WindowWidthSizeClass) {
                 .padding(it)
         ) {
             val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
-            val uiState by viewModel.uiState.collectAsState()
-            uiState?.let { it1 -> HomeScreen(networkState = viewModel.networkState, windowSize = windowSize, uiState = it1, viewModel = viewModel) }
+            HomeScreen( windowSize = windowSize,  viewModel = viewModel)
         }
     }
 }

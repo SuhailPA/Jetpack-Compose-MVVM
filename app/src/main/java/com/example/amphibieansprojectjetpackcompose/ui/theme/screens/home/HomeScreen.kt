@@ -20,6 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +34,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.amphibieansprojectjetpackcompose.R
 import com.example.amphibieansprojectjetpackcompose.model.AphibeanItem
-import com.example.amphibieansprojectjetpackcompose.model.UiState
 import com.example.amphibieansprojectjetpackcompose.nertwork.NetworkState
 import com.example.amphibieansprojectjetpackcompose.ui.theme.MainScreen
 
@@ -40,28 +41,38 @@ import com.example.amphibieansprojectjetpackcompose.ui.theme.MainScreen
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    networkState: NetworkState,
     windowSize: WindowWidthSizeClass,
-    uiState: UiState,
     viewModel: HomeViewModel
 ) {
+    val networkState by viewModel.networkState.collectAsState()
     when (networkState) {
         is NetworkState.Success -> {
             when (windowSize) {
-                WindowWidthSizeClass.Compact -> CompactView(data = networkState.data)
-                WindowWidthSizeClass.Medium -> HomeTabScreen(
-                    data = networkState.data,
-                    uiState = uiState,
-                    onItemClick = {
-                        viewModel.updateCurrentItem(it)
-                    })
+                WindowWidthSizeClass.Compact -> {
+                    CompactView(data = (networkState as NetworkState.Success).data)
+                }
 
-                WindowWidthSizeClass.Expanded -> HomeTabScreen(
-                    data = networkState.data,
-                    uiState = uiState,
-                    onItemClick = {
-                        viewModel.updateCurrentItem(it)
-                    })
+                WindowWidthSizeClass.Medium -> {
+                    HomeTabScreen(
+                        networkState = (networkState as NetworkState.Success).currentItem,
+                        data = (networkState as NetworkState.Success).data,
+                        onItemClick = {
+                            viewModel.updateCurrentItem(it)
+                        })
+                }
+
+                WindowWidthSizeClass.Expanded -> {
+                    HomeTabScreen(
+                        networkState = (networkState as NetworkState.Success).currentItem,
+                        data = (networkState as NetworkState.Success).data,
+                        onItemClick = {
+                            viewModel.updateCurrentItem(it)
+                        })
+                }
+
+                else -> {
+                    CompactView(data = (networkState as NetworkState.Success).data)
+                }
             }
         }
 
@@ -70,7 +81,7 @@ fun HomeScreen(
         }
 
         is NetworkState.Error -> {
-            LoadingErrorScreen(text = networkState.error)
+            LoadingErrorScreen(text = (networkState as NetworkState.Error).error)
         }
     }
 
@@ -90,7 +101,7 @@ fun CompactView(data: List<AphibeanItem>) {
 
 @Composable
 fun LoadingErrorScreen(text: String) {
-   Text(text = text, style = MaterialTheme.typography.titleLarge)
+    Text(text = text, style = MaterialTheme.typography.titleLarge)
 }
 
 @Composable
